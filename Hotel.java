@@ -3,8 +3,15 @@
 //Fecha: 21/08/2023
 //Arrgelos de objetos
 import java.util.Scanner;
+/**
+ * Clase principal que simula la gestión de reservas de habitaciones en un hotel.
+ */
 public class Hotel {
-
+        /**
+     * Método principal que ejecuta la aplicación.
+     *
+     * @param args Los argumentos de línea de comandos (no se utilizan en este caso).
+     */
     public static void main(String[]args)
     {
         //Creacion de las habitaciones
@@ -20,6 +27,7 @@ public class Hotel {
         habitaciones[0] = habitacion1;
         habitaciones[1] = habitacion2;
         habitaciones[2] = habitacion3;
+        boolean habitacionesOcupadas=false;
 
         //Menu
         while (true){
@@ -34,7 +42,7 @@ public class Hotel {
             System.out.print("Ingrese una opcion");
             int opcion = sc.nextInt();
 
-            switch (opcion){
+            switch (opcion) {
                 case 1:
                     System.out.println("==========================================================");
                     System.out.println("Ingrese el nombre del cliente");
@@ -44,93 +52,67 @@ public class Hotel {
                     System.out.println("Ingrese el numero de personas");
                     int personas = sc.nextInt();
                     System.out.println("==========================================================");
-                    cliente cliente = new cliente(nombre,visitas,personas);
-                    boolean clienteEnLista = false;
+                    // Crear un nuevo cliente
                     cliente clienteNuevo = new cliente(nombre, visitas, personas);
-                    boolean clienteAsignado = false;
-                
-                    for (habitacion h : habitaciones) {
-                        if (h.getEstado() && h.getTipo().equalsIgnoreCase(cliente) && h.getCapacidad() >= clienteNuevo.getAcompañantes() + 1) {
-                            h.setEstado(false);
-                            clienteAsignado = true;
-                            System.out.println("Habitación asignada correctamente al cliente: " + clienteNuevo.getNombre());
+                    // Colocar al cliente en la lista de espera si no hay habitaciones disponibles
+                    boolean clienteEnListaEspera = true;
+                    for (int i = 0; i < clientesEnEspera.length; i++) {
+                        if (clientesEnEspera[i] == null) {
+                            clientesEnEspera[i] = clienteNuevo;
+                            clienteEnListaEspera = false;
+                            System.out.println("El cliente ha sido añadido a la lista de espera.");
                             break;
                         }
                     }
-                
-                    if (!clienteAsignado) {
-                        for (int i = 0; i < clientesEnEspera.length; i++) {
-                            if (clientesEnEspera[i] == null) {
-                                clientesEnEspera[i] = clienteNuevo;
-                                System.out.println("Cliente en espera: " + clienteNuevo.getNombre());
-                                break;
-                            }
+                    if (clienteEnListaEspera) {
+                        System.out.println("La lista de espera está llena, no se puede agregar más clientes.");
+                    }
+                    habitacionesOcupadas=true;
+                    for (habitacion h : habitaciones) {
+                        if (!h.getEstado()) {
+                            habitacionesOcupadas=false;
+                            break;
                         }
-                    }               
-                    clientesEnEspera[clientesEnEspera.length - 1] = clienteNuevo;
+                    }
+                    if (habitacionesOcupadas) {
+                        System.out.println("Todas las habitaciones están ocupadas, el cliente ha sido añadido a la lista de espera.");
+                    }
                     break;
                 case 2:
                     System.out.println("==========================================================");
                     System.out.println("Ingrese el nombre del cliente");
                     String nombreCliente = sc.next();
                     System.out.println("==========================================================");
-                    
-                    cliente clienteEncontrado = null;
-                    for (cliente c : clientesEnEspera) {
-                        if (c != null && c.getNombre().toLowerCase().equals(nombreCliente.toLowerCase())) {
-                            clienteEncontrado = c;
+                    // Buscar al cliente en la lista de espera
+                    cliente clienteAsignado = null;
+                    for (int i = 0; i < clientesEnEspera.length; i++) {
+                        if (clientesEnEspera[i] != null && clientesEnEspera[i].getNombre().equalsIgnoreCase(nombreCliente)) {
+                            clienteAsignado = clientesEnEspera[i];
+                            clientesEnEspera[i] = null;
                             break;
                         }
                     }
-                    
-                    if (clienteEncontrado != null) {
-                        String tipoCliente = "Regular";
-                        if (clienteEncontrado.getVisitasHotel() >= 5 && clienteEncontrado.getVisitasHotel() < 10) {
-                            tipoCliente = "Frecuente";
-                        } else if (clienteEncontrado.getVisitasHotel() >= 10) {
-                            tipoCliente = "VIP";
-                        }
-                        
-                        habitacion habitacionDisponible = null;
+                    if (clienteAsignado != null) {
+                        // Asignar una habitación según la categoría del cliente
                         for (habitacion h : habitaciones) {
-                            if (h.getEstado() && h.getTipo().equalsIgnoreCase(tipoCliente) && h.getCapacidad() >= clienteEncontrado.getAcompañantes() + 1) {
-                                habitacionDisponible = h;
+                            if (h.getEstado()) {
+                                if (h.getTipo().equals("Estandar")&& clienteAsignado.getVisitasHotel() < 5) {
+                                    h.setEstado(false);
+                                    System.out.println("Habitación estándar asignada al cliente " + clienteAsignado.getNombre()+" con un precio de: "+h.getPrecio()+"$");
+                                } else if (h.getTipo().equals("Deluxe") && clienteAsignado.getVisitasHotel() >= 5) {
+                                    h.setEstado(false);
+                                    System.out.println("Habitación Deluxe asignada al cliente " + clienteAsignado.getNombre()+" con un precio de: "+h.getPrecio()+"$");
+                                } else if (h.getTipo().equals("Suites") && clienteAsignado.getVisitasHotel() >= 10) {
+                                    h.setEstado(false);
+                                    System.out.println("Suite asignada al cliente VIP " + clienteAsignado.getNombre()+" con un precio de: "+h.getPrecio()+"$");
+                                }
                                 break;
                             }
                         }
-                        
-                    if (clienteEncontrado != null) {
-                            for (habitacion h : habitaciones) {
-                                if (!h.getEstado() && h.getTipo().equalsIgnoreCase(tipoCliente) && h.getCapacidad() >= clienteEncontrado.getAcompañantes() + 1) {
-                                    System.out.println("Cliente ya ha sido asignado a una habitación.");
-                                    break;
-                                }
-                            }
-                    
-                        boolean enclientesEnEspera = false;
-                        for (cliente c : clientesEnEspera) {
-                                if (c != null && c.equals(clienteEncontrado)) {
-                                    enclientesEnEspera = true;
-                                    break;
-                                }
-                            }
-                    
-                        if (!enclientesEnEspera) {
-                            for (int i = 0; i < clientesEnEspera.length; i++) {
-                                    if (clientesEnEspera[i] == null) {
-                                        clientesEnEspera[i] = clienteEncontrado;
-                                        System.out.println("Cliente en espera: " + clienteEncontrado.getNombre());
-                                        break;
-                                    }
-                                }
-                        } else {
-                                System.out.println("Cliente ya está en la lista de espera.");
-                            }
-                        } else {
-                            System.out.println("Cliente no encontrado en la lista.");
-                        }
-                break;
+                    } else {
+                        System.out.println("El cliente no está en la lista de espera o no se encuentra.");
                     }
+                    break;
                 case 3:
                 //Limpiar todos los datos y regresar a 0 datos
                 for (habitacion h : habitaciones) {
@@ -145,5 +127,7 @@ public class Hotel {
         }
     }
 }
+
+
 
 
